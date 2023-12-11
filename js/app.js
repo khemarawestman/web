@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('showFavoritesButton').addEventListener('click', displayFavorites);
     fetchMovies();
 });
-
+//Lägger till en ny film i Firebase-databasen med användarens inmatade 
 function addMovie() {
     const titleInput = document.getElementById('title');
     const genreInput = document.getElementById('genre');
@@ -40,13 +40,13 @@ function addMovie() {
         console.error("Error adding movie: ", error);
     });
 }
-
+//Rensar inmatningsformuläret efter att en film har lagts till.
 function clearForm() {
     document.getElementById('title').value = '';
     document.getElementById('genre').value = '';
     document.getElementById('releaseDate').value = '';
 }
-
+// Söker efter filmer i databasen baserat på den inmatade titeln och visar resultatet.
 function searchMovie() {
     const searchTitle = document.getElementById('searchTitle').value.trim().toLowerCase();
 
@@ -61,7 +61,7 @@ function searchMovie() {
         displayMovies(filteredMovies);
     });
 }
-
+//Visar favoritfilmer från databasen.
 function displayFavorites() {
     const moviesRef = ref(database, 'movies');
     onValue(moviesRef, (snapshot) => {
@@ -74,14 +74,14 @@ function displayFavorites() {
         displayMovies(favoriteMovies);
     });
 }
-
+// Hämtar och visar alla filmer från databasen.
 function fetchMovies() {
     const moviesRef = ref(database, 'movies');
     onValue(moviesRef, (snapshot) => {
         displayMovies(snapshot.val());
     });
 }
-
+//Visar en lista med filmer på webbsidan baserat på den 
 function displayMovies(movies) {
     const movieList = document.getElementById('movieList');
     movieList.innerHTML = '';
@@ -109,7 +109,7 @@ function displayMovies(movies) {
         movieList.appendChild(movieItem);
     }
 }
-
+//Tar bort en film från databasen och uppdaterar filmvisningen.
 function deleteMovie(movieId) {
     remove(ref(database, 'movies/' + movieId)).then(() => {
         fetchMovies();
@@ -117,7 +117,7 @@ function deleteMovie(movieId) {
         console.error("Error deleting movie: ", error);
     });
 }
-
+//Ändrar status för en film 
 function watchedStatus(movieId, currentStatus) {
     update(ref(database, 'movies/' + movieId), { watched: !currentStatus }).then(() => {
         fetchMovies();
@@ -125,7 +125,7 @@ function watchedStatus(movieId, currentStatus) {
         console.error("Error updating movie: ", error);
     });
 }
-
+//Ändrar status för en film till "Favorit" eller "Ej favorit"
 function FavoriteStatus(movieId, currentStatus) {
     update(ref(database, 'movies/' + movieId), { favorite: !currentStatus }).then(() => {
         fetchMovies();

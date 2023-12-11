@@ -7,24 +7,25 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
+   
+    <section class="container">
         <h1>PicturePantry</h1>
-        
-        <div class="input-group">
+   
+        <article class="input-group">
             <input type="text" id="title" placeholder="Title">
             <input type="text" id="genre" placeholder="Genre">
             <input type="date" id="releaseDate" placeholder="Release Date">
             <button id="addMovieButton">Add Movie</button>
-        </div>
+        </article>
 
-        <div class="input-group">
+        <article class="input-group">
             <input type="text" id="searchTitle" placeholder="Search movie by title">
             <button id="searchMovieButton">Search</button>
             <button id="showFavoritesButton">Show Favorites</button>
-        </div>
-
+        </article>
+       
         <ul id="movieList"></ul>
-    </div>
+    </section>
     <script type="module" src="/js/app.js"></script>
     <script type="module" src="js/firebaseConfig.js"></script>
     
