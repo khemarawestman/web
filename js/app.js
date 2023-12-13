@@ -1,8 +1,15 @@
-// Firebase imports
-import app from './firebaseConfig.js';
-import { getDatabase, ref, set, remove, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-const database = getDatabase(app);
+// Import Firestore database
+import { db } from './firebaseConfig.js';
+import {
+    collection,
+    addDoc,
+    getDocs,
+    query,
+    where,
+    doc,
+    deleteDoc,
+    updateDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('addMovieButton').addEventListener('click', addMovie);
@@ -10,8 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('showFavoritesButton').addEventListener('click', displayFavorites);
     fetchMovies();
 });
-//Lägger till en ny film i Firebase-databasen med användarens inmatade 
-function addMovie() {
+
+// samlar användarinmatning
+async function addMovie() {
     const titleInput = document.getElementById('title');
     const genreInput = document.getElementById('genre');
     const releaseDateInput = document.getElementById('releaseDate');
@@ -25,111 +33,129 @@ function addMovie() {
         return;
     }
 
+    // kolla om titel är samma eller ej
+    const existingMovie = await checkIfMovieExists(title);
+    if (existingMovie) {
+        alert('This movie already exists in the database.');
+        return;
+    }
+
     const movieData = {
         title,
         genre,
         releaseDate,
         watched: false,
-        favorite: false
+        favorite: false,
+        titleLower: title.toLowerCase()
     };
 
-    set(ref(database, 'movies/' + title), movieData).then(() => {
+    try {
+        await addDoc(collection(db, 'movies'), movieData);
         fetchMovies();
         clearForm();
-    }).catch((error) => {
+    } catch (error) {
         console.error("Error adding movie: ", error);
-    });
+    }
 }
-//Rensar inmatningsformuläret efter att en film har lagts till.
+
+// Rensar inmatningsfälten
 function clearForm() {
     document.getElementById('title').value = '';
     document.getElementById('genre').value = '';
     document.getElementById('releaseDate').value = '';
 }
-// Söker efter filmer i databasen baserat på den inmatade titeln och visar resultatet.
-function searchMovie() {
-    const searchTitle = document.getElementById('searchTitle').value.trim().toLowerCase();
 
-    const moviesRef = ref(database, 'movies');
-    onValue(moviesRef, (snapshot) => {
-        const movies = snapshot.val();
-        const filteredMovies = Object.keys(movies).filter(key => movies[key].title.toLowerCase().includes(searchTitle)).reduce((obj, key) => {
-            obj[key] = movies[key];
-            return obj;
-        }, {});
+// Hämtar alla filmer från Firestore-databasen
+async function fetchMovies() {
+    const moviesCollection = collection(db, 'movies');
+    const snapshot = await getDocs(moviesCollection);
+    const movies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    displayMovies(movies);
+}
 
-        displayMovies(filteredMovies);
-    });
-}
-//Visar favoritfilmer från databasen.
-function displayFavorites() {
-    const moviesRef = ref(database, 'movies');
-    onValue(moviesRef, (snapshot) => {
-        const movies = snapshot.val();
-        const favoriteMovies = Object.keys(movies).filter(key => movies[key].favorite).reduce((obj, key) => {
-            obj[key] = movies[key];
-            return obj;
-        }, {});
-
-        displayMovies(favoriteMovies);
-    });
-}
-// Hämtar och visar alla filmer från databasen.
-function fetchMovies() {
-    const moviesRef = ref(database, 'movies');
-    onValue(moviesRef, (snapshot) => {
-        displayMovies(snapshot.val());
-    });
-}
-//Visar en lista med filmer på webbsidan baserat på den 
+// visa movies på html 
 function displayMovies(movies) {
     const movieList = document.getElementById('movieList');
     movieList.innerHTML = '';
 
-    for (const key in movies) {
-        const movie = movies[key];
+    movies.forEach(movie => {
         const movieItem = document.createElement('li');
         movieItem.textContent = `${movie.title} - ${movie.genre} - ${movie.releaseDate} - Watched: ${movie.watched} - Favorite: ${movie.favorite}`;
 
-        const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = 'Delete';
-        deleteBtn.onclick = () => deleteMovie(key);
-        movieItem.appendChild(deleteBtn);
+        const deleteBtn = createButton('Delete', () => deleteMovie(movie.id));
+        const watchedBtn = createButton(movie.watched ? 'Unmark Watched' : 'Mark Watched', () => toggleWatched(movie.id, movie.watched));
+        const favoriteBtn = createButton(movie.favorite ? 'Unmark Favorite' : 'Mark Favorite', () => toggleFavorite(movie.id, movie.favorite));
 
-        const watchedBtn = document.createElement('button');
-        watchedBtn.textContent = movie.watched ? 'Unmark Watched' : 'Mark Watched';
-        watchedBtn.onclick = () => watchedStatus(key, movie.watched);
-        movieItem.appendChild(watchedBtn);
-
-        const favoriteBtn = document.createElement('button');
-        favoriteBtn.textContent = movie.favorite ? 'Unmark Favorite' : 'Mark Favorite';
-        favoriteBtn.onclick = () => FavoriteStatus(key, movie.favorite);
-        movieItem.appendChild(favoriteBtn);
-
+        movieItem.append(deleteBtn, watchedBtn, favoriteBtn);
         movieList.appendChild(movieItem);
+    });
+}
+
+//  En hjälpfunktion som skapar och returnerar en knappelement
+function createButton(text, onClick) {
+    const button = document.createElement('button');
+    button.textContent = text;
+    button.onclick = onClick;
+    return button;
+}
+
+// Raderar en film från databasen baserat på det angivna film
+async function deleteMovie(movieId) {
+    try {
+        await deleteDoc(doc(db, 'movies', movieId));
+        fetchMovies();
+    } catch (error) {
+        console.error("Error deleting movie: ", error);
     }
 }
-//Tar bort en film från databasen och uppdaterar filmvisningen.
-function deleteMovie(movieId) {
-    remove(ref(database, 'movies/' + movieId)).then(() => {
+
+// Uppdaterar 'tittad' status för en specifik film 
+async function toggleWatched(movieId, currentStatus) {
+    try {
+        await updateDoc(doc(db, 'movies', movieId), { watched: !currentStatus });
         fetchMovies();
-    }).catch((error) => {
-        console.error("Error deleting movie: ", error);
-    });
-}
-//Ändrar status för en film 
-function watchedStatus(movieId, currentStatus) {
-    update(ref(database, 'movies/' + movieId), { watched: !currentStatus }).then(() => {
-        fetchMovies();
-    }).catch((error) => {
+    } catch (error) {
         console.error("Error updating movie: ", error);
-    });
+    }
 }
-//Ändrar status för en film till "Favorit" eller "Ej favorit"
-function FavoriteStatus(movieId, currentStatus) {
-    update(ref(database, 'movies/' + movieId), { favorite: !currentStatus }).then(() => {
+
+//  Växlar 'favorit' statusen för en specifik film i databasen
+async function toggleFavorite(movieId, currentStatus) {
+    try {
+        await updateDoc(doc(db, 'movies', movieId), { favorite: !currentStatus });
         fetchMovies();
-    }).catch((error) => {
+    } catch (error) {
         console.error("Error updating movie: ", error);
-    });
+    }
 }
+
+// Söker efter filmer baserat på titel
+async function searchMovie() {
+    const searchTitle = document.getElementById('searchTitle').value.trim();
+    if (!searchTitle) {
+        fetchMovies(); // Fetch all movies if search field is empty
+        return;
+    }
+
+    const moviesCollection = collection(db, 'movies');
+    const q = query(moviesCollection, where("title", "==", searchTitle));
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+        console.log("No matching movies found");
+        return;
+    }
+
+    const movies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    displayMovies(movies);
+}
+
+// Filtrerar och visar endast de filmer som är markerade som favoriter
+async function displayFavorites() {
+    const moviesCollection = collection(db, 'movies');
+    const q = query(moviesCollection, where("favorite", "==", true));
+    const snapshot = await getDocs(q);
+    const movies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    displayMovies(movies);
+}
+
