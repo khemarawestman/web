@@ -1,7 +1,7 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
+//min firebase config
 const firebaseConfig = {
     apiKey: "AIzaSyA1UqgszmVXrTnAWQHCpeY4JlInlU4fNRo",
     authDomain: "movie-ec0ce.firebaseapp.com",

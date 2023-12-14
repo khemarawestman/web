@@ -1,3 +1,4 @@
+//hämta data från databasen
 import * as Database from './dataBase.js';
 
 async function addMovie(title, genre, releaseDate) {
@@ -16,7 +17,7 @@ async function addMovie(title, genre, releaseDate) {
         throw new Error("Error adding movie: " + error.message);
     }
 }
-
+//hämta movies från db 
 async function fetchMovies() {
     try {
         return await Database.fetchMoviesFromDB();
@@ -24,7 +25,7 @@ async function fetchMovies() {
         throw new Error("Error fetching movies: " + error.message);
     }
 }
-
+//om man vill radera movie
 async function deleteMovie(movieId) {
     try {
         await Database.deleteMovieFromDB(movieId);
@@ -32,7 +33,7 @@ async function deleteMovie(movieId) {
         throw new Error("Error deleting movie: " + error.message);
     }
 }
-
+//funktionen som toggle Watch elller ej
 async function toggleWatched(movieId, currentStatus) {
     try {
         await Database.toggleWatchedInDB(movieId, currentStatus);
@@ -40,7 +41,7 @@ async function toggleWatched(movieId, currentStatus) {
         throw new Error("Error updating movie: " + error.message);
     }
 }
-
+//funktionen som toggle Favorit 
 async function toggleFavorite(movieId, currentStatus) {
     try {
         await Database.toggleFavoriteInDB(movieId, currentStatus);
@@ -48,7 +49,7 @@ async function toggleFavorite(movieId, currentStatus) {
         throw new Error("Error updating movie: " + error.message);
     }
 }
-
+//search funktionen 
 async function searchMovie(searchTitle) {
     try {
         return await Database.searchMoviesInDB(searchTitle);
@@ -56,7 +57,7 @@ async function searchMovie(searchTitle) {
         throw new Error("Error searching for movie: " + error.message);
     }
 }
-
+//display Favorites 
 async function displayFavorites() {
     try {
         return await Database.fetchFavoritesFromDB();
@@ -64,7 +65,7 @@ async function displayFavorites() {
         throw new Error("Error fetching favorites: " + error.message);
     }
 }
-
+//exporta alla funktioner som man behöver 
 export {
     addMovie,
     fetchMovies,
@@ -77,7 +78,7 @@ export {
 
 
 };
-
+//kolla om user har lagt samma title eller ej
 export async function movieExists(title) {
     try {
         const movies = await fetchMovies(); 

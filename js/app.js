@@ -1,13 +1,13 @@
 import * as MovieManager from './movieManger.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('addMovieButton').addEventListener('click', handleAddMovie);
-    document.getElementById('searchMovieButton').addEventListener('click', handleSearchMovie);
-    document.getElementById('showFavoritesButton').addEventListener('click', handleDisplayFavorites);
+    document.getElementById('addMovieButton').addEventListener('click', AddMovie);
+    document.getElementById('searchMovieButton').addEventListener('click', SearchMovie);
+    document.getElementById('showFavoritesButton').addEventListener('click',displayFavorites);
     refreshMovieList();
 });
 
-async function handleAddMovie() {
+async function AddMovie() {
     const titleInput = document.getElementById('title');
     const genreInput = document.getElementById('genre');
     const releaseDateInput = document.getElementById('releaseDate');
@@ -38,11 +38,11 @@ async function handleAddMovie() {
 
 export async function movieExists(title) {
     try {
-        const movies = await fetchMoviesFromDB(); // Assuming this function fetches all movies
+        const movies = await fetchMoviesFromDB(); 
         return movies.some(movie => movie.title.toLowerCase() === title.toLowerCase());
     } catch (error) {
         console.error("Error checking if movie exists: ", error);
-        throw error; // Rethrow the error to handle it in the calling function
+        throw error; 
     }
 }
 function clearForm() {
@@ -68,9 +68,9 @@ function displayMovies(movies) {
         const movieItem = document.createElement('li');
         movieItem.textContent = `${movie.title} - ${movie.genre} - ${movie.releaseDate} - Watched: ${movie.watched} - Favorite: ${movie.favorite}`;
 
-        const deleteBtn = createButton('Delete', () => handleDeleteMovie(movie.id));
-        const watchedBtn = createButton(movie.watched ? 'Unmark Watched' : 'Mark Watched', () => handleToggleWatched(movie.id, movie.watched));
-        const favoriteBtn = createButton(movie.favorite ? 'Unmark Favorite' : 'Mark Favorite', () => handleToggleFavorite(movie.id, movie.favorite));
+        const deleteBtn = createButton('Delete', () => deleteMovie(movie.id));
+        const watchedBtn = createButton(movie.watched ? 'Unmark Watched' : 'Mark Watched', () => toggleWatched(movie.id, movie.watched));
+        const favoriteBtn = createButton(movie.favorite ? 'Unmark Favorite' : 'Mark Favorite', () => toggleFavorite(movie.id, movie.favorite));
 
         movieItem.append(deleteBtn, watchedBtn, favoriteBtn);
         movieList.appendChild(movieItem);
@@ -84,7 +84,7 @@ function createButton(text, onClick) {
     return button;
 }
 
-async function handleDeleteMovie(movieId) {
+async function deleteMovie(movieId) {
     try {
         await MovieManager.deleteMovie(movieId);
         refreshMovieList();
@@ -93,7 +93,7 @@ async function handleDeleteMovie(movieId) {
     }
 }
 
-async function handleToggleWatched(movieId, currentStatus) {
+async function toggleWatched(movieId, currentStatus) {
     try {
         await MovieManager.toggleWatched(movieId, currentStatus);
         refreshMovieList();
@@ -102,7 +102,7 @@ async function handleToggleWatched(movieId, currentStatus) {
     }
 }
 
-async function handleToggleFavorite(movieId, currentStatus) {
+async function toggleFavorite(movieId, currentStatus) {
     try {
         await MovieManager.toggleFavorite(movieId, currentStatus);
         refreshMovieList();
@@ -111,7 +111,7 @@ async function handleToggleFavorite(movieId, currentStatus) {
     }
 }
 
-async function handleSearchMovie() {
+async function SearchMovie() {
     const searchTitle = document.getElementById('searchTitle').value.trim();
 
     try {
@@ -128,7 +128,7 @@ async function handleSearchMovie() {
     
 }
 
-async function handleDisplayFavorites() {
+async function displayFavorites() {
     try {
         const movies = await MovieManager.displayFavorites();
         displayMovies(movies);
